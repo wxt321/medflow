@@ -63,49 +63,8 @@ format_client_info="""{
     }
 }
 """
-#format_patient_info="""{
-#    "姓名": "",
-#    "性别": "",
-#    "出生日期": {
-#        "年": "",
-#        "月": "",
-#        "日":""
-#    },
-#    "证件类型": "大陆居民身份证",
-#    "证件号码": "",
-#    "手机号码": "",
-#    "详细地址": "",
-#    "所居区域": {
-#        "省": "",
-#        "市": "",
-#        "区": "",
-#        "街道": ""
-#    }
-#}
-#"""
 
 #病历
-format_chief_complaint="""{
-    "主诉": "",
-    "现病史": ""
-}
-"""
-format_history_of_persent_illness="""{
-    "既往史": "xxx,xxx,xxx"
-}
-"""
-format_personal_history="""{
-    "个人史": "xxx;xxx"
-}
-"""
-format_allergy_history="""{
-    "主诉": "",
-    "现病史": "",
-    "既往史": "",
-    "个人史": "",
-    "过敏史": "xxx;xxx;xxx"
-}
-"""
 format_basic_medical_record="""{
     "主诉": "",
     "现病史": "",
@@ -359,6 +318,107 @@ format_generate_therapy="""{
 }
 """
 
+#多方案-治疗
+format_generate_medicine="""
+{
+"处方":[
+{
+"药品编号":"YP123456",
+"药品名称":"维生素C片",
+"药品规格":"0.1g*100",
+"厂家名称":"XXXXXXXX制药厂",
+"开单数量":"10",
+"开单单位":"粒",
+"用药途径":"口服",
+"单次剂量":"1粒",
+"持续天数":"7天",
+"用药频次":"每日3次",
+"针对疾病":"",
+"药品作用":""
+},
+{
+"药品编号":"YP123457",
+"药品名称":"",
+"药品规格":"0.1g*100",
+"厂家名称":"XXXXXXXX制药厂",
+"开单数量":"10",
+"开单单位":"粒",
+"用药途径":"口服",
+"单次剂量":"1粒",
+"持续天数":"7天",
+"用药频次":"每日3次",
+"针对疾病":"",
+"药品作用":""
+},
+{
+"药品编号":"YP123458",
+"药品名称":"",
+"药品规格":"0.1g*100",
+"厂家名称":"XXXXXXXX制药厂",
+"开单数量":"10",
+"开单单位":"粒",
+"用药途径":"口服",
+"单次剂量":"1粒",
+"持续天数":"7天",
+"用药频次":"每日3次",
+"针对疾病":"",
+"药品作用":""
+}
+],
+"输液":[
+{
+"药品编号":"ZS123456",
+"药品名称":"维生素C注射液",
+"药品规格":"0.5g*10*2ml",
+"厂家名称":"XXXXXXXX制药股份有限公司",
+"开单数量":"1",
+"开单单位":"支",
+"用药途径":"静脉滴注",
+"单次剂量":"1支",
+"持续天数":"1天",
+"用药频次":"每日1次",
+"针对疾病":"",
+"药品作用":"",
+"输液分组":"第一组",
+"输液速度":"30gtt/min"
+},
+{
+"药品编号":"ZS123457",
+"药品名称":"",
+"药品规格":"0.5g*10*2ml",
+"厂家名称":"XXXXXXXX制药股份有限公司",
+"开单数量":"1",
+"开单单位":"支",
+"用药途径":"静脉滴注",
+"单次剂量":"1支",
+"持续天数":"1天",
+"用药频次":"每日1次",
+"针对疾病":"",
+"药品作用":"",
+"输液分组":"第一组",
+"输液速度":"30gtt/min"
+}
+],
+"处置":[
+{
+"项目编号":"CZ123457",
+"项目名称":"换药",
+"频次":"Qd",
+"单次用量":"1",
+"持续时间":"1天"
+},
+{
+"项目编号":"CZ123457",
+"项目名称":"",
+"频次":"Qd",
+"单次用量":"1",
+"持续时间":"1天"
+}
+]
+}
+"""
+
+
 #复诊
 format_return_visit="""{
     "病情总结": "",
@@ -445,40 +505,17 @@ request_type_map={
    "hospitalguide": "v8",
    "doctormedicalrecord": "v9"
 }
-therapy_scheme_map={
-    "prescription": "default_therapy",
-    "transfusion": "default_therapy",
-    "disposition": "default_therapy",
-    "surgical": "other_therapy",
-    "chemo": "other_therapy",
-    "radiation": "other_therapy",
-    "psycho": "other_therapy",
-    "rehabilitation": "other_therapy",
-    "physical": "other_therapy",
-    "alternative": "other_therapy",
-    "observation": "other_therapy"
-}
 
 #问候语
 greetings_prompt="您好，请详细描述您的症状，主要说明哪里不舒服，持续了多久。可以参考以下案例来描述：\
 \n<span style='color: blue'>“胃痉挛，胃部隐痛，上腹部疼痛，持续一天</span>”"
 
 #每句后添加的
-#single_add_prompt="\n请用中文回答，每次只能提问一个问题。"
 single_add_prompt="\n每次只提问一个问题。"
-#single_max_round="\n请重新生成病历"
 single_max_round="\n请生成病历。"
 single_min_round="请问您还有其他补充的吗？"
 first_round="您的就诊档案已经建立成功，欢迎您来我院就诊，期望我们可以帮助到您。"
-#irrelevant_content="抱歉😊，我是一个医生助理，请避免谈论无关话题，您可以尝试换个问题，我会尽力帮助您。"
 irrelevant_content="\n如果我提到了与当前任务不相关的话题，必须给出不要讨论无关话题的提醒。"
-certificate_number="抱歉😊，您输入的证件号码不符合规范，请核对后重新输入。"
-certificate_number_guardian="抱歉😊，您输入的证件号码所对应的监护人年龄过小，请核对后重新输入。"
-patient_gender="抱歉😊，您输入的患者性别不符合规范，请核对后重新输入。"
-patient_age="抱歉😊，您输入的患者出生日期需要包含正确的“年/月/日”，请核对后重新输入。"
-mobile_number="抱歉😊，您输入的手机号码不符合规范，请核对后重新输入。"
-#current_address="抱歉😊，您输入的现居地址需要包含正确的“省/市/区/街道”四个级别，请核对后重新输入。"
-#detail_address="抱歉😊，您输入的详细地址没有具体到门牌号，请核对后重新输入。例如，XXX路XXX号、XXX小区XX号楼XX单元XX号。"
 #multi_agent_prompt="\n如果我有表达“建档、预问诊、挂号、缴费、报告查询”的意思，你需要直接返回【XXX链接】。\
 #例如：【建档链接】、【预问诊链接】、【挂号链接】、【缴费链接】、【报告查询链接】。返回链接时先说“我为您找到了如下链接：”。"
 multi_agent_prompt=""
@@ -486,10 +523,8 @@ multi_agent_prompt=""
 stop_sign = [
     '现在为您返回',
     '已经为您生成了预问诊报告，如无问题，请点击确认',
-    '为您生成病历',
     '如下预约就诊，您看是否可以？',
-    '抱歉，目前没有查询到',
-    '生成治疗方法'
+    '抱歉，目前没有查询到'
 ]
 
 format_new_regiter_info = "新挂号"
@@ -501,11 +536,6 @@ class PromptTemplate():
         self.format_distribute = format_distribute
         self.format_client_select = format_client_select
         self.format_client_info = format_client_info
-        #self.format_patient_info = format_patient_info
-        self.format_chief_complaint = format_chief_complaint
-        self.format_history_of_persent_illness = format_history_of_persent_illness
-        self.format_personal_history = format_personal_history
-        self.format_allergy_history = format_allergy_history
         self.format_basic_medical_record = format_basic_medical_record
         self.format_department_single = format_department_single 
         self.format_department_multi = format_department_multi
@@ -518,12 +548,11 @@ class PromptTemplate():
         self.format_disposition = format_disposition
         self.format_pick_therapy = format_pick_therapy
         self.format_generate_therapy = format_generate_therapy
+        self.format_generate_medicine = format_generate_medicine
         self.format_return_visit = format_return_visit
         self.format_hospital_guide1 = format_hospital_guide1
         self.format_hospital_guide2 = format_hospital_guide2
         self.format_translate = format_translate
-        #self.format_doctor_medical_record_text = format_doctor_medical_record_text
-        #self.format_doctor_medical_record_template = format_doctor_medical_record_template
         self.format_new_regiter_info = format_new_regiter_info
 
     def set_prompt(self):

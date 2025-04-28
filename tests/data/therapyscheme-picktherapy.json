@@ -1,28 +1,30 @@
 {
     "input": {
-        "client_info": [{
-            "patient": {
-                "patient_name": "张三",
-                "patient_gender": "女",
-                "patient_age": "76",
-                "if_child": "否",
-                "certificate_type": "",
-                "certificate_number": "",
-                "mobile_number": "",
-                "current_address": {
-                    "province": "",
-                    "city": "",
-                    "district": "",
-                    "street": ""
+        "client_info": [
+            {
+                "patient": {
+                    "patient_name": "张三",
+                    "patient_gender": "女",
+                    "patient_age": "76",
+                    "if_child": "否",
+                    "certificate_type": "",
+                    "certificate_number": "",
+                    "mobile_number": "",
+                    "current_address": {
+                        "province": "",
+                        "city": "",
+                        "district": "",
+                        "street": ""
+                    },
+                    "detailed_address": ""
                 },
-                "detailed_address": ""
-            },
-            "guardian": {
-                "guardian_name": "",
-                "certificate_type": "",
-                "certificate_number": ""
+                "guardian": {
+                    "guardian_name": "",
+                    "certificate_type": "",
+                    "certificate_number": ""
+                }
             }
-        }],
+        ],
         "basic_medical_record": {
             "chief_complaint": "解黑便11小时",
             "history_of_present_illness": "昨晚20时开始无明显诱因出现解黑便2次，呈黑色成形大便，每次量约100g，伴阵发性腹部隐痛，偶有头晕、出冷汗，有气促，无晕厥，无胸痛、胸闷，无呕吐，无发热",

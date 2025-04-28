@@ -17,7 +17,7 @@ from frontend.ui.ui import (
     interface_distribute,
     interface_clientinfo,
     interface_basicmedicalrecord,
-    inteface_hospitalregister,
+    interface_hospitalregister,
     interface_diagnosis,
     interface_examass,
     interface_scheme,
@@ -27,51 +27,105 @@ from frontend.ui.ui import (
     quality_inspect_interface,
     quality_modify_interface
 )
-from frontend.ui.tabs import build_multi_tabs
+
+block_css = """
+#shared_group div.svelte-1nguped {
+    background: white;
+}
+"""
 
 def build_app():
-    with gr.Blocks(title="MedFlow", theme="soft") as app:
+    with gr.Blocks(title="MedFlow", theme="soft", css=block_css) as app:
         with gr.Row():
             gr.Markdown("## **🏥 MedFlow**")
         with gr.Row():
-            with gr.Column(scale=1, min_width="100px"):
-                pre_btn = gr.Button("🩺 诊前模块", size="md")
-                in_btn = gr.Button("🥼 诊中模块", size="md")
-                post_btn = gr.Button("📋️ 诊后模块", size="md")
+            with gr.Column(scale=1, min_width="600px"):
+                state = gr.State(value = [False, False, False])
+                pre_btn = gr.Button("ℹ️ 诊前模块", variant="primary", size="md")
+                distribute_btn = gr.Button("🏷️ 任务分发", size="md", visible=False)
+                clientinfo_btn = gr.Button("👤 患者建档", size="md", visible=False)
+                basicmedicalrecord_btn = gr.Button("🗣️ 症状预问诊", size="md", visible=False)
+                hospitalguide_btn = gr.Button("🪧 导诊推荐科室", size="md", visible=False)
+                hospitalregister_btn = gr.Button("🏢 智能挂号", size="md", visible=False)
+
+                in_btn = gr.Button("🥼 诊中模块", variant="primary", size="md")
+                quality_inspect_btn = gr.Button("🔍 病历质检-检验", size="md", visible=False)
+                quality_modify_btn = gr.Button("✍️ 病历质检-修改", size="md", visible=False)
+                doctormedicalrecord_btn = gr.Button("📄 病历生成", size="md", visible=False)
+                diagnosis_btn = gr.Button("🧬 疾病诊断", size="md", visible=False)
+                examass_btn = gr.Button("🧪 检查化验开具", size="md", visible=False)
+                scheme_btn = gr.Button("🌿 治疗方案", size="md", visible=False)
+
+                post_btn = gr.Button("📋️ 诊后模块", variant="primary", size="md")
+                returnvisit_btn = gr.Button("🔁 患者复诊", size="md", visible=False)
+
             with gr.Column(scale=15):
-                with gr.Column(visible=True) as pre_section:
-                    build_multi_tabs([
-                        (interface_distribute, "️🏷️ 任务分发", "distribute", False),
-                        (interface_clientinfo, "👤 患者建档", "clientinfo", True),
-                        (interface_basicmedicalrecord, "🗣️ 症状预问诊", "basicmedicalrecord", True),
-                        (interface_hospitalguide, "🪧 导诊推荐科室", "hospitalguide", True),
-                        (inteface_hospitalregister, "🏢 智能挂号", "hospitalregister", True),
-                    ])
-                with gr.Column(visible=False) as in_section:
-                    build_multi_tabs([
-                        (quality_inspect_interface, "🔍 病历质检-检验", "quality_inspect", True),
-                        (quality_modify_interface, "✍️ 病历质检-对话修改", "quality_modify", True),
-                        (interface_doctormedicalrecord , "📄 病历生成", "doctormedicalrecord", True),
-                        (interface_diagnosis, "🧬 疾病诊断", "diagnosis", True),
-                        (interface_examass, "🧪 检查化验开具", "examass", True),
-                        (interface_scheme, "🌿 治疗方案", "scheme", True),
-                    ])
-                with gr.Column(visible=False) as post_section:
-                    build_multi_tabs([
-                        (interface_returnvisit, "🔁 患者复诊", "returnvisit", True),
-                    ])
+                with gr.Group(visible=False) as view_distirbute:
+                    interface_distribute.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_clientinfo:
+                    interface_clientinfo.render()
+                with gr.Group(visible=True, elem_id="shared_group") as view_basicmedicalrecord:
+                    interface_basicmedicalrecord.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_hospitalguide:
+                    interface_hospitalguide.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_hospitalregister:
+                    interface_hospitalregister.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_quality_inspect:
+                    quality_inspect_interface.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_quality_modify:
+                    quality_modify_interface.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_doctormedicalrecord:
+                    interface_doctormedicalrecord.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_diagnosis:
+                    interface_diagnosis.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_examass:
+                    interface_examass.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_scheme:
+                    interface_scheme.render()
+                with gr.Group(visible=False, elem_id="shared_group") as view_returnvisit:
+                    interface_returnvisit.render()
+
+        def navigation(idx, state):
+            idx = int(idx)
+            state[idx] = not state[idx]
+            if idx == 0:
+                return state, gr.update(visible=state[idx]), gr.update(visible=state[idx]), \
+                    gr.update(visible=state[idx]), gr.update(visible=state[idx])
+            if idx == 1:
+                return state, gr.update(visible=state[idx]), gr.update(visible=state[idx]), \
+                    gr.update(visible=state[idx]), gr.update(visible=state[idx]), gr.update(visible=state[idx]), \
+                    gr.update(visible=state[idx])
+            if idx == 2:
+                return state, gr.update(visible=state[idx])
 
         pre_btn.click(
-            lambda: [gr.update(visible=(i==0)) for i in range(3)],
-            outputs=[pre_section, in_section, post_section]
+            fn=navigation,
+            inputs=[gr.Text(value=0, visible=False), state],
+            outputs=[state, clientinfo_btn, basicmedicalrecord_btn, hospitalguide_btn, hospitalregister_btn]
         )
         in_btn.click(
-            lambda: [gr.update(visible=(i==1)) for i in range(3)],
-            outputs=[pre_section, in_section, post_section]
+            fn=navigation,
+            inputs=[gr.Text(value=1, visible=False), state],
+            outputs=[state, quality_inspect_btn, quality_modify_btn, doctormedicalrecord_btn, diagnosis_btn, examass_btn, scheme_btn]
         )
         post_btn.click(
-            lambda: [gr.update(visible=(i==2)) for i in range(3)],
-            outputs=[pre_section, in_section, post_section]
+            fn=navigation,
+            inputs=[gr.Text(value=2, visible=False), state],
+            outputs=[state, returnvisit_btn]
+        )
+
+        def sub_btns_click(btns):
+            for idx, btn in enumerate(btns):
+                btn.click(
+                    lambda idx=idx: [gr.update(visible=(i==idx)) for i in range(len(btns))],
+                    outputs=[view_clientinfo, view_basicmedicalrecord, view_hospitalguide, view_hospitalregister,
+                             view_quality_inspect, view_quality_modify, view_doctormedicalrecord, view_diagnosis,
+                             view_examass, view_scheme, view_returnvisit]
+                )
+
+        sub_btns_click(
+            btns=[clientinfo_btn, basicmedicalrecord_btn, hospitalguide_btn, hospitalregister_btn, quality_inspect_btn,
+                  quality_modify_btn, doctormedicalrecord_btn, diagnosis_btn, examass_btn, scheme_btn, returnvisit_btn]
         )
 
     return app

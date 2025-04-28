@@ -19,12 +19,13 @@ from typing import Any, Dict, List, Union
 from fastapi import HTTPException
 from .quality_common_ds import PhyscialExamination, BasicMedicalRecord, ControlQuality, HistoricalConversations, QualityAPIRequest, DebugPrompt, QualityAPIResponse, QualityAPIRequestInput, QualityAPIResponseOutput, HistoricalConversation
 from .quality_common_ds import qc_map_chinese_to_english_physcial_examination, qc_map_chinese_to_english, modify_control_quality_data, map_cn_key_to_en_key
-# import quality_common_ds
+from .quality_common_ds import RecursiveDict
 
 import json
 from openai import OpenAI, AsyncOpenAI
 import asyncio
 from pydantic import BaseModel, Field, ValidationError
+from jinja2 import Template
 
 
 class QualityModify:
@@ -34,12 +35,14 @@ class QualityModify:
         openai_api_base: str,
         model_name : str,
         async_client : AsyncOpenAI | None,
+        prompt_conf : RecursiveDict,
     ):
         self.input_request = input_request
         self.openai_api_key = openai_api_key
         self.openai_api_base = openai_api_base
         self.model_name = model_name
         self.historical_conversations = historical_conversations
+        self.prompt_conf = prompt_conf
         
         if async_client is None:
             self.async_client = AsyncOpenAI(api_key = openai_api_key, base_url = openai_api_base)
@@ -117,32 +120,25 @@ class QualityModify:
     
     def __get_quality_modify_message(self):
         #92-质检对话修改病历
-        system_str=f"""
-#Role
-病历质检员
-## Profile
--description: 你的工作是按照待询问的问题与医生进行多轮沟通，沟通完成后重新生成病历。
-## Skills
-具备扎实的医疗知识，掌握病历书写的标准规则。
-## Medical Record
-主诉：{self.input_request.basic_medical_record.chief_complaint}。
-现病史：{self.input_request.basic_medical_record.history_of_present_illness  or self.kong_str}。
-既往史：{self.input_request.basic_medical_record.past_medical_history or self.kong_str}。
-个人史：{self.input_request.basic_medical_record.personal_history or self.kong_str}。
-过敏史：{self.input_request.basic_medical_record.allergy_history or self.kong_str}。
-体格检查：{self.physical_examination}。
-辅助检查：{self.auxiliary_examination}。
-## Problems
-{self.handle_control_quality}
-## Workflow
-1.按照<Problems>中的问题，依次向医生进行询问，每次只能提问一个问题，例如：“当前的问题是：xxx，请问xxx？”。
-2.检查<Problems>中的问题是否全部都向医生进行了提问。如果没有就直接向医生提问下一个问题。
-3.根据的病历修改意见，重新生成病历。重新生成病历时先说“我已按照您的要求修改了病历，现在为您重新生成病历：”。\
-病历的格式为json格式，例如：{self.format_case}。病历生成结束后，说“请确认病历信息是否准确，如果正确请回复“正确”，\
-如果不正确请回复需要修改的内容。”。注意：体温、脉搏、血压、呼吸都记录到体格检查。
-4.如果医生表示有其他需要修改的内容，按照医生的要求重新生成病历，病历的格式为json格式，例如：{self.format_case}。
-## Initialization :
-作为 <Role>，拥有<Skills>技能，病历为<Medical Record>，待询问的问题有<Problems>，按<Workflow>的顺序和医生对话。"""
+        template_str = self.prompt_conf["quality_prompts"]["quality_modify_chat"]["versions"]["v1"]
+        history_of_present_illness = self.input_request.basic_medical_record.history_of_present_illness or self.kong_str
+        past_medical_history = self.input_request.basic_medical_record.past_medical_history or self.kong_str
+        personal_history = self.input_request.basic_medical_record.personal_history or self.kong_str
+        allergy_history = self.input_request.basic_medical_record.allergy_history or self.kong_str
+        variables = {
+            "chief_complaint": self.input_request.basic_medical_record.chief_complaint,
+            "history_of_present_illness": history_of_present_illness,
+            "past_medical_history": past_medical_history,
+            "personal_history": personal_history,
+            "allergy_history": allergy_history,
+            "physical_examination": self.physical_examination,
+            "auxiliary_examination": self.auxiliary_examination,
+            "handle_control_quality": self.handle_control_quality,
+            "format_case": self.format_case
+        }
+        template = Template(template_str)
+        system_str = template.render(**variables)
+
         user_str=f"""请开始进行进行提问。"""
         messages=[{"role": "system", "content":system_str}]
 
@@ -195,7 +191,7 @@ class QualityModify:
     def confirm_auto_modify_request(self)-> QualityAPIResponse:
         if len(self.input_request.control_quality) == 0:
             raise HTTPException(status_code = 422, detail="no control_quality info, request must give control_quality") 
-        response = QualityAPIResponse.from_request(self.input_request) 
+        response = QualityAPIResponse(**self.input_request.dict()) 
         
         if ":" in self.input_request.control_quality[0].auto_modify_info:
             parts = self.input_request.control_quality[0].auto_modify_info.split(":")
@@ -246,7 +242,7 @@ class QualityModify:
         query = self.__get_quality_modify_message()
         results = await self.async_predict(messages=query)
 
-        response = QualityAPIResponse.from_request(self.input_request)      
+        response = QualityAPIResponse(**self.input_request.dict()) 
         
         historical_conversation_new = HistoricalConversation(role='assistant', content=results)
         

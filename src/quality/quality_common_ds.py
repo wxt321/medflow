@@ -17,6 +17,9 @@ from pydantic import BaseModel, Field
 from fastapi import FastAPI, Body
 from typing_extensions import Annotated
 
+RecursiveDict = Dict[str, Union['RecursiveDict', str, int, float, bool, None]]
+
+
 class PhyscialExamination(BaseModel):
     temperature: str
     pulse: str
@@ -42,8 +45,8 @@ class ControlQuality(BaseModel):
     auto_modify_info: str=""
     positive_example: str=None
     negative_example: str=None
-    check_quality_detaile: str=None
-    amend_advice: str=None
+    check_quality_detaile: str | None = None
+    amend_advice: str | None = None
     
 
 class HistoricalConversation(BaseModel):
@@ -83,38 +86,14 @@ class QualityAPIRequestInput(BaseModel):
     input: QualityAPIRequest | None = None
     chat: HistoricalConversations | None = None
     
-class QualityAPIResponse(BaseModel):
+class QualityAPIResponse(QualityAPIRequest):
     """_summary_
     Quality API Response data struct
 
     Args:
         BaseModel (_type_): _description_
     """
-    basic_medical_record: BasicMedicalRecord
-    control_quality: Optional[List[ControlQuality]] = Field(None, exclude_none=True)
-    historical_conversations: Optional[List[HistoricalConversation]] = Field(None, exclude_if=lambda v: v is None)
-    # remark: Optional[str] = Field(None, exclude_none=True)
-    # debug_prompt: Optional[DebugPrompt] = Field(None, exclude_none=True)
-
-    control_quality_config_name : str | None = None
-    department_name: str | None = None
-    last_basic_medical_record: BasicMedicalRecord | None = None
-    medical_treatment_stage: str | None = None
     
-    @classmethod
-    def from_request(cls, request: QualityAPIRequest) -> 'QualityAPIResponse':
-        # 
-        return cls(
-            basic_medical_record=request.basic_medical_record,
-            control_quality=request.control_quality,
-            # historical_conversations=request.historical_conversations,
-            # remark=request.remark,
-            # debug_prompt=request.debug_prompt,
-            control_quality_config_name = request.control_quality_config_name,
-            department_name = request.department_name,
-            last_basic_medical_record = request.last_basic_medical_record,
-            medical_treatment_stage = request.medical_treatment_stage
-        )
 
 class QualityAPIResponseOutput(BaseModel):
     output: QualityAPIResponse | None = None

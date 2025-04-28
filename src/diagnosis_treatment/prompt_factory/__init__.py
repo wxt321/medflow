@@ -39,3 +39,4 @@ from .returnvisit_v1 import *
 from .returnvisit_v2 import *
 from .scheme_v1 import *
 from .scheme_v2 import *
+from .scheme_v3 import *

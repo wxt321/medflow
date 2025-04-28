@@ -292,7 +292,7 @@ class QualityInspect:
         
         results = await asyncio.gather(*(self.async_predict(query, control_quality) for query, control_quality in zip(queries, self.quality_list)))
         
-        response = QualityAPIResponse.from_request(self.input_request) 
+        response = QualityAPIResponse(**self.input_request.dict()) 
         clear_results = self.remove_normal_control_quality(results)  
         
         response.control_quality = clear_results

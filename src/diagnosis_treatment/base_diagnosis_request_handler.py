@@ -183,7 +183,7 @@ class BaseDiagnosisRequestHandler(ABC):
             messages=messages,
             temperature=temp,
             top_p=top_p,
-            max_tokens=1024,#8192
+            max_tokens=2048,#8192
             stream=False,#True
             stop="<|eot_id|>",
         )
@@ -204,7 +204,7 @@ class BaseDiagnosisRequestHandler(ABC):
             messages=messages,
             temperature=temp,
             top_p=top_p,
-            max_tokens=1024,
+            max_tokens=2048,
             stream=True,
             stop="<|eot_id|>",
         )

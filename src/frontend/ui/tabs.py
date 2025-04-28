@@ -22,7 +22,7 @@ def build_chat_tab(module_name, json_data, prompt_name, default_chat, function, 
     module = gr.Textbox(value=module_name, visible=False)
     with gr.Row():
         with gr.Accordion(label="JSON", open=True):
-            json_display = gr.Code(value=json.dumps(json_data, indent=4, ensure_ascii=False), language="json", label="", interactive=True, max_lines=36)
+            json_display = gr.Code(value=json.dumps(json_data, indent=4, ensure_ascii=False), language="json", label="", interactive=True, max_lines=40)
             if module_name == "hospitalregister":
                 current_date = get_current_date()
                 today = gr.Textbox(value=current_date, show_label=False, interactive=False)
@@ -97,7 +97,7 @@ def build_nochat_tab(module_name, json_data, prompt_name, module_label, btn_name
     with gr.Row():
         with gr.Column():
             with gr.Accordion(label="JSON", open=True, visible=True):
-                json_display = gr.Code(value=json.dumps(json_data, indent=4, ensure_ascii=False), language="json", label="", interactive=True, max_lines=33)
+                json_display = gr.Code(value=json.dumps(json_data, indent=4, ensure_ascii=False), language="json", label="", interactive=True, max_lines=40)
             json_file = gr.Textbox(value="", visible=False, show_label=False)
             json_md = gr.Markdown(value="")
 
@@ -108,11 +108,11 @@ def build_nochat_tab(module_name, json_data, prompt_name, module_label, btn_name
                 branch = gr.Dropdown(label=branch_content["label"], choices=branch_content["choices"], value=branch_content["value"], interactive=True, show_label=False, container=False)
             else:
                 branch = gr.Dropdown(visible=False)
-            result_json = gr.Code(value=json.dumps({}, indent=4, ensure_ascii=False), language="json", label="", interactive=True, max_lines=33, visible=False)
-            result_text = gr.Textbox(label="️📑 "+module_label, placeholder="", value="", show_label=True, interactive=False, lines=24)
-            note_md = gr.Markdown(value=note)
+            result_json = gr.Code(value=json.dumps({}, indent=4, ensure_ascii=False), language="json", label="", interactive=True, max_lines=40, visible=False)
+            result_text = gr.Textbox(label="️📑 "+module_label, placeholder="", value="", show_label=True, interactive=False, lines=29)
             with gr.Row():
-                send_btn = gr.Button(value="🚀 "+btn_name, variant="primary")
+                send_btn = gr.Button(value="🪄 "+btn_name, variant="primary")
+            note_md = gr.Markdown(value=note)
 
     if module_name not in ["diagnosis", "scheme"]:
         #send_btn.click(function,

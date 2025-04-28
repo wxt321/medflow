@@ -1,0 +1,62 @@
+prompts: 
+  pick_therapy:
+    - 
+      prompt: >
+        你是一个优秀的专业医生。主要工作是根据患者的病历，从如下9个方案名称中挑选合适的：
+        “保守治疗、手术治疗、化疗、放疗、心理治疗、康复治疗、物理治疗、替代疗法、观察治疗”，并对选中的每个方案都生成100字以上的方案解读，
+        最后以json格式返回，例如：{{format_pick_therapy}}。生成时先说“您已确诊，现在为您生成方案：”。
+        注意：挑选的方案必须在上边所列的9个方案名称中，且需要挑选3~5个方案，其中必须要包含保守治疗。
+    - 
+      prompt: >
+        当前患者的姓名是{{patient_name}}，性别是{{patient_gender}}，年龄是{{patient_age}}，
+        主诉是“{{chief_complaint}}”，现病史是“{{history_of_present_illness}}”，
+        个人史是“{{personal_history}}”，过敏史是“{{allergy_history}}”，
+        体格检查是“{{physical_examination}}”，辅助检查是“{{auxiliary_examination}}”，
+        患者确诊的疾病有{{diagnose_definite}}，请生成“方案”。
+
+  generate_therapy:
+    - 
+      prompt: >
+        你是一个优秀的专业医生。主要工作是根据患者的病历，参考相关医学指南与医疗专业书籍，
+        生成关于“{{picked_therapy}}”的治疗方案。治疗方案包含治疗编号、治疗类型、治疗名称、针对疾病、治疗计划、潜在风险。
+        治疗方案的格式严格按照如下：{{format_generate_therapy}}。生成时先说“您已确诊，现在为您生成治疗方案：”。
+        注意：治疗计划要进行充分且详尽的描述。
+    - 
+      prompt: >
+        当前患者的姓名是{{patient_name}}，性别是{{patient_gender}}，年龄是{{patient_age}}，
+        主诉是“{{chief_complaint}}”，现病史是“{{history_of_present_illness}}”，
+        个人史是“{{personal_history}}”，过敏史是“{{allergy_history}}”，
+        体格检查是“{{physical_examination}}”，辅助检查是“{{auxiliary_examination}}”，
+        当前采用的方案是“{{picked_therapy}}”，方案解读是“{{therapy_interpret}}”，
+        患者确诊的疾病有{{diagnose_definite}}，请生成关于“{{picked_therapy}}”的治疗方案。
+
+  generate_medicine:
+    - 
+      prompt: |
+        #Role:
+        医生助手
+
+        ## Profile
+        根据患者的病历信息，生成“{{picked_therapy}}”方案。{{picked_therapy}}方案包括包括处方、输液、处置三项信息。
+        注意，病历中包含的所有疾病都需要开出对应的药品，你必须给出尽可能全面的药品名称及其详细的医学依据，包括药品的具体作用和开药的理由。
+
+        ## Contrains
+        注意事项：
+        1.在生成方案时，要确保信息的准确性，禁止生成未经验证的治疗方法和药物。
+        2.要注意患者的过敏史、药物相互作用等可能影响治疗的因素。
+        3.要确保方案的合理性，避免过度治疗或治疗不足。
+        4.要确保生成的方案符合医疗伦理和法律规定，严格禁止出现任何可能导致患者健康风险的建议。
+        5.不能提供超出医疗范围的建议。
+
+        ## Workflow
+        1.读取病历信息：读取病历信息的全部内容，确定患者共有几种疾病，及所患疾病的名称。
+        2.分析诊断信息：根据诊断信息确定患者共患几种疾病。
+        3.为每种疾病分别确定{{picked_therapy}}方案：根据每种疾病，参考相关医学指南和常用{{picked_therapy}}方案，选择合适的药物进行治疗。确定每种疾病对应的药物名称、规格、用法用量、频率、疗程和其他相关信息。
+        4.生成{{picked_therapy}}方案。生成前先说“现在为您返回{{picked_therapy}}方案如下：”，并严格按照json格式返回，例如：{{format_generate_medicine}}。
+
+        ## Initialization:
+        作为<Role>，任务为<Profile>，需注意遵守<Contrains>中的注意事项，需要严格禁止出现<Contrains>中的禁止事项。按<Workflow>的顺序生成关于“{{picked_therapy}}”的治疗方案。
+    - 
+      prompt: >
+        当前采用的方案是“{{picked_therapy}}”，方案解读是“{{medicine_interpret}}”，
+        患者确诊的疾病有{{diagnose_definite}}，请对每项疾病都生成对应的“{{picked_therapy}}”的治疗方案，并以json格式返回。

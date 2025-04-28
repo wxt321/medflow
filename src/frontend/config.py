@@ -21,7 +21,7 @@ prompt_versions = {
     "hospitalregister": ["v1", "v2", "v3", "v4", "v5"],
     "diagnosis": ["v1", "v2"],
     "examass": ["v1", "v2"],
-    "scheme": ["v1", "v2"],
+    "scheme": ["v1", "v2", "v3"],
     "returnvisit": ["v1", "v2"],
     "hospitalguide": ["v1", "v2"],
     "doctormedicalrecord": ["v1", "v2"],

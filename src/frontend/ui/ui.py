@@ -114,7 +114,7 @@ def create_interface_doctormedicalrecord():
 
 def create_interface_examass():
     with gr.Blocks(analytics_enabled=False) as interface_examass:
-        json_display, module, *args = build_nochat_tab(
+        json_display, module, *_ = build_nochat_tab(
             module_name="examass",
             json_data=inference_gradio_json_data['examass'],
             prompt_name=prompt_versions["examass"],
@@ -155,128 +155,221 @@ def create_interface_diagnosis(json_display_examass, examass, json_display_schem
     return interface_diagnosis, json_display, module
 
 def create_interface_scheme():
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_surgical:
-        json_display_surgical, *args = build_nochat_tab(
+    with gr.Blocks(analytics_enabled=False) as interface_medicine_default:
+        default_medicine, *_ = build_nochat_tab(
+            module_name="default",
+            json_data={},
+            prompt_name=prompt_versions["scheme"],
+            module_label="保守治疗",
+            btn_name="生成 保守治疗",
+            function=fetch_response_generate_medicine
+        )
+    with gr.Blocks(analytics_enabled=False) as interface_medicine_surgical:
+        surgical_medicine, *_ = build_nochat_tab(
             module_name="surgical",
             json_data={},
             prompt_name=prompt_versions["scheme"],
             module_label="手术治疗",
-            btn_name="生成手术治疗",
-            function=fetch_response_sub_scheme
+            btn_name="生成 手术治疗",
+            function=fetch_response_generate_medicine
         )
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_chemo:
-        json_display_chemo, *args = build_nochat_tab(
+    with gr.Blocks(analytics_enabled=False) as interface_medicine_chemo:
+        chemo_medicine, *_ = build_nochat_tab(
             module_name="chemo",
             json_data={},
             prompt_name=prompt_versions["scheme"],
             module_label="化学治疗",
-            btn_name="生成化学治疗",
-            function=fetch_response_sub_scheme
+            btn_name="生成 化学治疗",
+            function=fetch_response_generate_medicine
         )
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_radiation:
-        json_display_radiation, *args = build_nochat_tab(
+    with gr.Blocks(analytics_enabled=False) as interface_medicine_radiation:
+        radiation_medicine, *_ = build_nochat_tab(
             module_name="radiation",
             json_data={},
             prompt_name=prompt_versions["scheme"],
             module_label="放射治疗",
-            btn_name="生成放射治疗",
-            function=fetch_response_sub_scheme
+            btn_name="生成 放射治疗",
+            function=fetch_response_generate_medicine
         )
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_psycho:
-        json_display_psycho, *args = build_nochat_tab(
+    with gr.Blocks(analytics_enabled=False) as interface_medicine_psycho:
+        psycho_medicine, *_ = build_nochat_tab(
             module_name="psycho",
             json_data={},
             prompt_name=prompt_versions["scheme"],
             module_label="心理治疗",
-            btn_name="生成心理治疗",
-            function=fetch_response_sub_scheme
+            btn_name="生成 心理治疗",
+            function=fetch_response_generate_medicine
         )
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_rehabilitation:
-        json_display_rehabilitation, *args = build_nochat_tab(
+    with gr.Blocks(analytics_enabled=False) as interface_medicine_rehabilitation:
+        rehabilitation_medicine, *_ = build_nochat_tab(
             module_name="rehabilitation",
             json_data={},
             prompt_name=prompt_versions["scheme"],
             module_label="康复治疗",
-            btn_name="生成康复治疗",
-            function=fetch_response_sub_scheme
+            btn_name="生成 康复治疗",
+            function=fetch_response_generate_medicine
         )
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_physical:
-        json_display_physical, *args = build_nochat_tab(
+    with gr.Blocks(analytics_enabled=False) as interface_medicine_physical:
+        physical_medicine, *_ = build_nochat_tab(
             module_name="physical",
             json_data={},
             prompt_name=prompt_versions["scheme"],
             module_label="物理治疗",
-            btn_name="生成物理治疗",
-            function=fetch_response_sub_scheme
+            btn_name="生成 物理治疗",
+            function=fetch_response_generate_medicine
         )
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_alternative:
-        json_display_alternative, *args = build_nochat_tab(
+    with gr.Blocks(analytics_enabled=False) as interface_medicine_alternative:
+        alternative_medicine, *_ = build_nochat_tab(
             module_name="alternative",
             json_data={},
             prompt_name=prompt_versions["scheme"],
             module_label="替代疗法",
-            btn_name="生成替代疗法",
-            function=fetch_response_sub_scheme
+            btn_name="生成 替代疗法",
+            function=fetch_response_generate_medicine
         )
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_observation:
-        json_display_observation, *args = build_nochat_tab(
+    with gr.Blocks(analytics_enabled=False) as interface_medicine_observation:
+        observation_medicine, *_ = build_nochat_tab(
             module_name="observation",
             json_data={},
             prompt_name=prompt_versions["scheme"],
             module_label="观察治疗",
-            btn_name="生成观察治疗",
-            function=fetch_response_sub_scheme
+            btn_name="生成 观察治疗",
+            function=fetch_response_generate_medicine
         )
 
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_prescription:
-        json_display_prescription, *args = build_nochat_tab(
-            module_name="prescription",
+    with gr.Blocks(analytics_enabled=False) as interface_scheme_default:
+        default, module, results_json, *_ = build_nochat_tab(
+            module_name="default",
             json_data={},
             prompt_name=prompt_versions["scheme"],
-            module_label="处方",
-            btn_name="生成处方",
-            function=fetch_response_sub_scheme,
-            note="括号中内容为匹配数据表后的药品名称。"
+            module_label="保守治疗",
+            btn_name="生成 保守治疗",
+            function=fetch_response_generate_scheme
         )
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_transfusion:
-        json_display_transfusion, *args = build_nochat_tab(
-            module_name="transfusion",
+        build_send_button(
+            btn_config=[{"label": "发送到 治疗药物(保守治疗)", "display": default_medicine, "module": module, "visible": True}],
+            result_json=results_json
+        )
+    with gr.Blocks(analytics_enabled=False) as interface_scheme_surgical:
+        surgical, module, results_json, *_ = build_nochat_tab(
+            module_name="surgical",
             json_data={},
             prompt_name=prompt_versions["scheme"],
-            module_label="输液",
-            btn_name="生成输液",
-            function=fetch_response_sub_scheme,
-            note="括号中内容为匹配数据表后的药品名称。"
+            module_label="手术治疗",
+            btn_name="生成 手术治疗",
+            function=fetch_response_generate_scheme
         )
-    with gr.Blocks(analytics_enabled=False) as interface_scheme_disposition:
-        json_display_disposition, *args = build_nochat_tab(
-            module_name="disposition",
+        build_send_button(
+            btn_config=[{"label": "发送到 治疗药物(手术治疗)", "display": surgical_medicine, "module": module, "visible": True}],
+            result_json=results_json
+        )
+    with gr.Blocks(analytics_enabled=False) as interface_scheme_chemo:
+        chemo, module, results_json, *_ = build_nochat_tab(
+            module_name="chemo",
             json_data={},
             prompt_name=prompt_versions["scheme"],
-            module_label="处置",
-            btn_name="生成处置",
-            function=fetch_response_sub_scheme
+            module_label="化学治疗",
+            btn_name="生成 化学治疗",
+            function=fetch_response_generate_scheme
         )
+        build_send_button(
+            btn_config=[{"label": "发送到 治疗药物(化学治疗)", "display": chemo_medicine, "module": module, "visible": True}],
+            result_json=results_json
+        )
+    with gr.Blocks(analytics_enabled=False) as interface_scheme_radiation:
+        radiation, module, results_json, *_ = build_nochat_tab(
+            module_name="radiation",
+            json_data={},
+            prompt_name=prompt_versions["scheme"],
+            module_label="放射治疗",
+            btn_name="生成 放射治疗",
+            function=fetch_response_generate_scheme
+        )
+        build_send_button(
+            btn_config=[{"label": "发送到 治疗药物(放射治疗)", "display": radiation_medicine, "module": module, "visible": True}],
+            result_json=results_json
+        )
+    with gr.Blocks(analytics_enabled=False) as interface_scheme_psycho:
+        psycho, module, results_json, *_ = build_nochat_tab(
+            module_name="psycho",
+            json_data={},
+            prompt_name=prompt_versions["scheme"],
+            module_label="心理治疗",
+            btn_name="生成 心理治疗",
+            function=fetch_response_generate_scheme
+        )
+        build_send_button(
+            btn_config=[{"label": "发送到 治疗药物(心理治疗)", "display": psycho_medicine, "module": module, "visible": True}],
+            result_json=results_json
+        )
+    with gr.Blocks(analytics_enabled=False) as interface_scheme_rehabilitation:
+        rehabilitation, module, results_json, *_ = build_nochat_tab(
+            module_name="rehabilitation",
+            json_data={},
+            prompt_name=prompt_versions["scheme"],
+            module_label="康复治疗",
+            btn_name="生成 康复治疗",
+            function=fetch_response_generate_scheme
+        )
+        build_send_button(
+            btn_config=[{"label": "发送到 治疗药物(康复治疗)", "display": rehabilitation_medicine, "module": module, "visible": True}],
+            result_json=results_json
+        )
+    with gr.Blocks(analytics_enabled=False) as interface_scheme_physical:
+        physical, module, results_json, *_ = build_nochat_tab(
+            module_name="physical",
+            json_data={},
+            prompt_name=prompt_versions["scheme"],
+            module_label="物理治疗",
+            btn_name="生成 物理治疗",
+            function=fetch_response_generate_scheme
+        )
+        build_send_button(
+            btn_config=[{"label": "发送到 治疗药物(物理治疗)", "display": physical_medicine, "module": module, "visible": True}],
+            result_json=results_json
+        )
+    with gr.Blocks(analytics_enabled=False) as interface_scheme_alternative:
+        alternative, module, results_json, *_ = build_nochat_tab(
+            module_name="alternative",
+            json_data={},
+            prompt_name=prompt_versions["scheme"],
+            module_label="替代疗法",
+            btn_name="生成 替代疗法",
+            function=fetch_response_generate_scheme
+        )
+        build_send_button(
+            btn_config=[{"label": "发送到 治疗药物(替代疗法)", "display": alternative_medicine, "module": module, "visible": True}],
+            result_json=results_json
+        )
+    with gr.Blocks(analytics_enabled=False) as interface_scheme_observation:
+        observation, module, results_json, *_ = build_nochat_tab(
+            module_name="observation",
+            json_data={},
+            prompt_name=prompt_versions["scheme"],
+            module_label="观察治疗",
+            btn_name="生成 观察治疗",
+            function=fetch_response_generate_scheme
+        )
+        build_send_button(
+            btn_config=[{"label": "发送到 治疗药物(观察治疗)", "display": observation_medicine, "module": module, "visible": True}],
+            result_json=results_json
+        )
+
 
     with gr.Blocks(analytics_enabled=False) as interface_scheme:
-        with gr.TabItem("🗳️ 挑选方案"):
-            json_display, module, result_json, send_btn, json_file, json_md, result_text, *args = build_nochat_tab(
+        with gr.TabItem("🗳️ Step 1: 挑选方案"):
+            json_display, module, result_json, send_btn, json_file, json_md, result_text, *_ = build_nochat_tab(
                 module_name="scheme",
                 json_data=inference_gradio_json_data['scheme'],
                 prompt_name=prompt_versions["scheme"],
                 module_label="多方案",
                 btn_name="生成多方案",
-                function=fetch_response_scheme,
+                function=fetch_response_pick_scheme,
                 note="请先点击“疾病诊断”页面“生成诊断”，再点击“发送到 治疗方案”。"
             )
-        with gr.TabItem("💊 默认方案"):
+        with gr.TabItem("📑 Step 2: 生成方案"):
             build_multi_tabs([
-                (interface_scheme_prescription, "处方", "prescription", True),
-                (interface_scheme_transfusion, "输液", "transfusion", True),
-                (interface_scheme_disposition, "处置", "disposition", True)
-            ])
-        with gr.TabItem("📑 其他方案"):
-            build_multi_tabs([
+                (interface_scheme_default, "保守治疗", "default", True),
                 (interface_scheme_surgical, "手术治疗", "surgical", True),
                 (interface_scheme_chemo, "化疗", "chemo", True),
                 (interface_scheme_radiation, "放疗", "radiation", True),
@@ -286,13 +379,25 @@ def create_interface_scheme():
                 (interface_scheme_alternative, "替代疗法", "alternative", True),
                 (interface_scheme_observation, "观察治疗", "observation", True)
             ])
+        with gr.TabItem("💊 Step 3: 治疗药物"):
+            build_multi_tabs([
+                (interface_medicine_default, "保守治疗", "default", True),
+                (interface_medicine_surgical, "手术治疗", "surgical", True),
+                (interface_medicine_chemo, "化疗", "chemo", True),
+                (interface_medicine_radiation, "放疗", "radiation", True),
+                (interface_medicine_psycho, "心理治疗", "psycho", True),
+                (interface_medicine_rehabilitation, "康复治疗", "rehabilitation", True),
+                (interface_medicine_physical, "物理治疗", "physical", True),
+                (interface_medicine_alternative, "替代疗法", "alternative", True),
+                (interface_medicine_observation, "观察治疗", "observation", True)
+            ])
 
-        send_btn.click(fetch_response_scheme,
+        send_btn.click(fetch_response_pick_scheme,
             inputs=[json_display, json_file, module],
             outputs=[json_file, json_md, result_text, result_json,
-                json_display_prescription, json_display_transfusion, json_display_disposition,
-                json_display_surgical, json_display_chemo, json_display_radiation, json_display_psycho,
-                json_display_rehabilitation, json_display_physical, json_display_alternative, json_display_observation
+                default, surgical, chemo, radiation, psycho, rehabilitation, physical, alternative, observation,
+                default_medicine, surgical_medicine, chemo_medicine, radiation_medicine, psycho_medicine,
+                rehabilitation_medicine, physical_medicine, alternative_medicine, observation_medicine
             ]
         )
 
@@ -308,7 +413,7 @@ interface_diagnosis, json_display_diagnosis, diagnosis = create_interface_diagno
 interface_distribute = create_interface_distribute()
 interface_clientinfo = create_interface_clientinfo()
 interface_basicmedicalrecord = create_interface_basicmedicalrecord(json_display_diagnosis, diagnosis)
-inteface_hospitalregister = create_interface_hospitalregister()
+interface_hospitalregister = create_interface_hospitalregister()
 
 interface_hospitalguide = create_interface_hospitalguide()
 interface_doctormedicalrecord = create_interface_doctormedicalrecord()

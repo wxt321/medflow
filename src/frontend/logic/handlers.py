@@ -26,9 +26,9 @@ from diagnosis_treatment.prompt_template import (
     reversed_medical_fields,
     reversed_sub_medical_fields,
     reversed_therapy_scheme_fields,
-    request_type_map,
-    therapy_scheme_map
+    request_type_map
 )
+from fastapi import HTTPException
 
 path = os.getcwd()
 
@@ -93,23 +93,28 @@ def chat_process(messages, json_diaplay_v, json_file, json_v:str, branch=None):
 def send_to_tab(from_data, to_data, module):
     from_data = json.loads(from_data)
     to_data = json.loads(to_data)
-    match module:#to
-        case "diagnosis":
-            to_data['input']['client_info'] = from_data['input']['client_info']
-            to_data['input']['basic_medical_record'] = from_data['output']['basic_medical_record']
-        case "examass" | "scheme":
-            to_data['input'].update({'client_info': from_data['input']['client_info'],
-                'basic_medical_record': from_data['input']['basic_medical_record'],
-                'diagnosis': from_data['output']['diagnosis']})
-        case "returnvisit":
-            to_data = inference_gradio_json_data['returnvisit']
-            to_data['input'].update({'client_info': from_data['input']['client_info'],
-                'basic_medical_record': from_data['input']['basic_medical_record'],
-                'diagnosis': from_data['output']['diagnosis']})
-            to_data['output']['return_visit'].update({'summary': "", 'if_visit': ""})
-            to_data['chat'].update({'historical_conversations_bak': [], 'historical_conversations': []})
-    from_data = json.dumps(from_data, ensure_ascii=False, indent=4)
-    to_data = json.dumps(to_data, ensure_ascii=False, indent=4)
+    try:
+        match module:#to
+            case "diagnosis":
+                to_data['input']['client_info'] = from_data['input']['client_info']
+                to_data['input']['basic_medical_record'] = from_data['output']['basic_medical_record']
+            case "examass" | "scheme":
+                to_data['input'].update({'client_info': from_data['input']['client_info'],
+                    'basic_medical_record': from_data['input']['basic_medical_record'],
+                    'diagnosis': from_data['output']['diagnosis']})
+            case "returnvisit":
+                to_data = inference_gradio_json_data['returnvisit']
+                to_data['input'].update({'client_info': from_data['input']['client_info'],
+                    'basic_medical_record': from_data['input']['basic_medical_record'],
+                    'diagnosis': from_data['output']['diagnosis']})
+                to_data['output']['return_visit'].update({'summary': "", 'if_visit': ""})
+                to_data['chat'].update({'historical_conversations_bak': [], 'historical_conversations': []})
+            case "default" | "surgical" | "chemo" | "radiation" | "psycho" | "rehabilitation" | "physical" | "alternative" | "observation":
+                to_data['output'][f'{module}_therapy']['method'] = from_data['output'][f'{module}_therapy']['method']
+        from_data = json.dumps(from_data, ensure_ascii=False, indent=4)
+        to_data = json.dumps(to_data, ensure_ascii=False, indent=4)
+    except:
+        raise HTTPException(status_code=400, detail="Please check the input and output.")
     return from_data, to_data
 
 async def fetch_response(msg, json_display, json_file, module, branch=None):
@@ -154,7 +159,6 @@ async def fetch_response(msg, json_display, json_file, module, branch=None):
                     json_md=""
 
                 return None, new_history, json_display, json_file, module, json_md, branch
-
 
             else:
                 return "Error: Unable to fetch response from inference API."
@@ -302,7 +306,7 @@ async def fetch_response_nochat(json_display, json_file, module, json_md, result
         else:
             return "Error: Unable to fetch response from inference API."
 
-async def fetch_response_scheme(json_display, json_file, module):
+async def fetch_response_pick_scheme(json_display, json_file, module):
     unique_id = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     json_file= f"{module}-{unique_id}.json"
     json_display_dict = json.loads(json_display)
@@ -322,34 +326,75 @@ async def fetch_response_scheme(json_display, json_file, module):
                 json.dump((result_json), f, ensure_ascii=False, indent=4)
             f.close()
             json_md=f"""Successfully! write data to {json_file}."""
-            result_json=json_display_prescription=json_display_transfusion=json_display_disposition=json_display_surgical=json_display_chemo=json_display_radiation= \
-            json_display_psycho=json_display_rehabilitation=json_display_physical=json_display_alternative=json_display_observation = json.dumps(result_json, ensure_ascii=False, indent=4)
-            return json_file, json_md, result_text, result_json, json_display_prescription, json_display_transfusion, json_display_disposition, \
-json_display_surgical, json_display_chemo, json_display_radiation, json_display_psycho, json_display_rehabilitation, json_display_physical, json_display_alternative, json_display_observation
+            result_json=default=surgical=chemo=radiation=psycho=rehabilitation=physical=alternative=observation=\
+            default_medicine=surgical_medicine=chemo_medicine=radiation_medicine=psycho_medicine=\
+            rehabilitation_medicine=physical_medicine=alternative_medicine=observation_medicine=json.dumps(result_json, ensure_ascii=False, indent=4)
+            return json_file, json_md, result_text, result_json, \
+            default, surgical, chemo, radiation, psycho, rehabilitation, physical, alternative, observation, \
+            default_medicine, surgical_medicine, chemo_medicine, radiation_medicine, psycho_medicine, \
+            rehabilitation_medicine, physical_medicine, alternative_medicine, observation_medicine
         else:
             return "Error: Unable to fetch response from inference API."
 
-async def fetch_response_sub_scheme(json_display, json_file, module, json_md, result_text, result_json, branch=None):
+async def fetch_response_generate_scheme(json_display, json_file, module, json_md, result_text, result_json, branch=None):
     unique_id = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     json_file = f"{module}-{unique_id}.json"
     json_display_dict = json.loads(json_display)
-    scheme = therapy_scheme_map[module]
-    sub_scheme = module + "_therapy" if module not in ["prescription", "transfusion", "disposition"] else module
-    url = f"http://{args.host}:{args.port}/inference?request_type=v6&scheme={scheme}&sub_scheme={sub_scheme}"
+
+    sub_scheme = module + "_therapy"
+    url = f"http://{args.host}:{args.port}/inference?request_type=v6&scheme=generate_therapy&sub_scheme={sub_scheme}"
     async with httpx.AsyncClient() as client:
         response = await client.post(
             url,
             json=json_display_dict,
-            timeout=240,
+            timeout=360,
         )
         if response.status_code == 200:
             print(f"\n请求结果:{response.json()}")
             results_json = response.json()
             results = ""
-            if scheme == "default_therapy":
-                for i, v in enumerate(response.json()['output'][scheme][sub_scheme][0][sub_scheme+'_content']):
-                    if module == "prescription":
-                        results += f"""【药品名称: {v['drug_name']}  （{v['drug_name_retrieve']}）】
+            for i, v in enumerate(response.json()['output'][module+"_therapy"]['method'][0]['methodtherapy_content']):
+                results += f"""【治疗名称: {v['method_name']}】
+治疗编号: {v['method_code']}
+治疗类型: {v['method_type']}
+适用疾病: {v['corresponding_diseases']}
+治疗计划: {v['method_plan']}
+潜在风险: {v['method_risk']}\n\n\n"""
+
+            with open(json_file, 'w', encoding='utf-8') as f:
+                json.dump((results_json), f, ensure_ascii=False, indent=4)
+            f.close()
+            json_md=f"""Successfully! write data to {json_file}."""
+            results_json = json.dumps(results_json, ensure_ascii=False, indent=4)
+            return json_display, json_file, module, json_md, results, results_json, branch
+        else:
+            return "Error: Unable to fetch response from inference API."
+
+async def fetch_response_generate_medicine(json_display, json_file, module, json_md, result_text, result_json, branch=None):
+    unique_id = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    json_file = f"{module}-{unique_id}.json"
+    json_display_dict = json.loads(json_display)
+
+    sub_scheme = module + "_therapy"
+    url = f"http://{args.host}:{args.port}/inference?request_type=v6&scheme=generate_medicine&sub_scheme={sub_scheme}"
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            url,
+            json=json_display_dict,
+            timeout=360,
+        )
+        if response.status_code == 200:
+            print(f"\n请求结果:{response.json()}")
+            results_json = response.json()
+            results = ""
+            prescription = response.json()['output'][sub_scheme]['medicine']['prescription']
+            transfusion = response.json()['output'][sub_scheme]['medicine']['transfusion']
+            disposition = response.json()['output'][sub_scheme]['medicine']['disposition']
+            line_str = "-"*40
+            if prescription != []:
+                results += f"{line_str}处方：{line_str}\n"
+                for v in prescription[0]['prescription_content']:
+                    results += f"""【药品名称: {v['drug_name']}  （{v['drug_name_retrieve']}）】
 适应疾病: {v['corresponding_diseases']}
 药品作用: {v['drug_efficacy']}
 药品信息: 
@@ -362,8 +407,10 @@ async def fetch_response_sub_scheme(json_display, json_file, module, json_md, re
     单次剂量: {v['dosage']}
     用药频次: {v['frequency']}
     持续时间: {v['duration']}\n\n\n"""
-                    if module == "transfusion":
-                        results += f"""【药品名称: {v['drug_name']}  （{v['drug_name_retrieve']}）】
+            if transfusion != []:
+                results += f"{line_str}输液：{line_str}\n"
+                for v in transfusion[0]['transfusion_content']:
+                    results += f"""【药品名称: {v['drug_name']}  （{v['drug_name_retrieve']}）】
 适应疾病: {v['corresponding_diseases']}
 药品作用: {v['drug_efficacy']}
 药品信息: 
@@ -378,20 +425,14 @@ async def fetch_response_sub_scheme(json_display, json_file, module, json_md, re
     持续时间: {v['duration']}
     输液分组: {v['infusion_group']}
     输液速度: {v['infusion_rate']}\n\n\n"""
-                    if module == "disposition":
-                        results += f"""【处置名称: {v['disposition_name']}】
+            if disposition != []:
+                results += f"{line_str}处置：{line_str}\n"
+                for v in disposition[0]['disposition_content']:
+                    results += f"""【处置名称: {v['disposition_name']}】
 处置编号: {v['disposition_id']}
 单次用量: {v['dosage']}
 处置频次: {v['frequency']}
 持续时间: {v['duration']}\n\n\n"""
-            if scheme == "other_therapy":
-                for i, v in enumerate(response.json()['output'][module+"_therapy"]['method'][0]['methodtherapy_content']):
-                    results += f"""【治疗名称: {v['method_name']}】
-治疗编号: {v['method_code']}
-治疗类型: {v['method_type']}
-适用疾病: {v['corresponding_diseases']}
-治疗计划: {v['method_plan']}
-潜在风险: {v['method_risk']}\n\n\n"""
 
             with open(json_file, 'w', encoding='utf-8') as f:
                 json.dump((results_json), f, ensure_ascii=False, indent=4)

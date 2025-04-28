@@ -241,25 +241,6 @@ class InputV6(BaseModel):
     basic_medical_record: BasicMedicalRecord
     diagnosis: List[Diagnosis]
 
-class PickTherapy(BaseModel):
-    picked_therapy: str
-    interpret_therapy: str
-
-class MethodTherapyContent(BaseModel):
-    method_code: str
-    method_type: str
-    method_name: str
-    method_name_retrieve: str
-    corresponding_diseases: str
-    method_plan: str
-    method_risk: str
-
-class MethodTherapy(BaseModel):
-    methodtherapy_content: List[MethodTherapyContent]
-
-class BasicTherapy(BaseModel):
-    method: List[MethodTherapy] = Field(default_factory=list)
-
 class PrescriptionContent(BaseModel):
     drug_id: str
     drug_name: str
@@ -303,9 +284,29 @@ class DefaultTherapy(BaseModel):
     transfusion: List[Transfusion] = Field(default_factory=list)
     disposition: List[Disposition] = Field(default_factory=list)
 
+class PickTherapy(BaseModel):
+    picked_therapy: str
+    interpret_therapy: str
+
+class MethodTherapyContent(BaseModel):
+    method_code: str
+    method_type: str
+    method_name: str
+    method_name_retrieve: str
+    corresponding_diseases: str
+    method_plan: str
+    method_risk: str
+
+class MethodTherapy(BaseModel):
+    methodtherapy_content: List[MethodTherapyContent]
+
+class BasicTherapy(BaseModel):
+    method: List[MethodTherapy] = Field(default_factory=list)
+    medicine: DefaultTherapy = Field(default_factory=DefaultTherapy)
+
 class OutputV6(BaseModel):
     pick_therapy: List[PickTherapy] = Field(default_factory=list)
-    default_therapy: DefaultTherapy = Field(default_factory=DefaultTherapy)
+    default_therapy: BasicTherapy = Field(default_factory=BasicTherapy)
     surgical_therapy: BasicTherapy = Field(default_factory=BasicTherapy)
     chemo_therapy: BasicTherapy = Field(default_factory=BasicTherapy)
     radiation_therapy: BasicTherapy = Field(default_factory=BasicTherapy)
