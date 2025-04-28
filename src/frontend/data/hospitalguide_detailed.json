@@ -43,11 +43,11 @@
         },
         "chosen_department": [
             {
-                "department_id": "1f0f55bc398046ae05d0.101811.",
+                "department_id": "028",
                 "department_name": "成人发热门诊"
             },
             {
-                "department_id": "5ae37e47016d46aa2073.101211.",
+                "department_id": "017",
                 "department_name": "呼吸内科门诊"
             }
         ]
