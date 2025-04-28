@@ -44,7 +44,7 @@ class PromptDoctorMedicalRecord_v2(PromptTemplate):
         return matches
 
     def __extract_medical_from_tmplet(self, basic_medical_record):
-        result = {field: ("" if field is not "physical_examination" else {f: "" for f in self.sub_medical_fields.values()}) for field in self.medical_fields.values()}
+        result = {field: ("" if field != "physical_examination" else {f: "" for f in self.sub_medical_fields.values()}) for field in self.medical_fields.values()}
         if self.templet_type == "1":
             text = self.medical_templet
         elif self.templet_type == "2":
