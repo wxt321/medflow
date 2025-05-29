@@ -37,7 +37,7 @@ QUALITY_INSPECT_PROMPT_TEMPLATE_V1_0_CONTENT_OUTPUT = Template("""如果符合�
 如果不符合标准，质检结果为:"不通过"，不通过情况下给出详细说明。
 不要输出python代码。
 只检查待检查内容，不要检查因待检查内容而推理生成的内容。
-检查结果以json格式输出，例如：{"质检结果": "","原因": "","建议修改为":""}。
+检查结果以json格式输出，例如：{"质检结果": "","原因": "","建议修改为":"",\"错误片段\":\"\"(列出原文中不通过的描述片段，用于前端高亮显示，json列表格式)}。
 """)
 
 QUALITY_INSPECT_PROMPT_TEMPLATE_V1_0_CONTENT_INPUT = Template("""待检查内容为:"$inspect_content。"
@@ -63,7 +63,10 @@ class QualityInspect:
             self.async_client = AsyncOpenAI(api_key = openai_api_key, base_url = openai_api_base)
         else:
             self.async_client = async_client
-        self.quality_list = [ControlQuality(**data) for data in self.quality_template_info] 
+        if self.input_request.control_quality is not None:
+            self.quality_list = self.input_request.control_quality
+        else:
+            self.quality_list = [ControlQuality(**data) for data in self.quality_template_info] 
         self.kong_str = "空"
         self.format_inspect = """{
     "质检结果": ""
@@ -80,6 +83,7 @@ class QualityInspect:
         self.QUALITY_PASS = "通过"
         
         self.RESON_OF_NO_PASS = "原因"
+        self.ERROR_SEGMENT = "错误片段"
 
     def __con_medical_record(self, field : str, item : str) -> str:
         """generate new new_fields for AI inference 
@@ -239,6 +243,53 @@ class QualityInspect:
         return ret_control_quality
         
     
+    def correction_control_quality_values(self, control_quality: ControlQuality):
+        field_path_map={
+            "主诉": "input.basic_medical_record.chief_complaint",
+            "现病史": "input.basic_medical_record.history_of_present_illness",
+            "既往史": "input.basic_medical_record.past_medical_history",
+            "个人史": "input.basic_medical_record.personal_history",
+            "过敏史": "input.basic_medical_record.allergy_history",
+            "体格检查": "input.basic_medical_record.physical_examination",
+            "体温": "input.basic_medical_record.physical_examination.temperature",
+            "脉搏": "input.basic_medical_record.physical_examination.pulse",
+            "血压": "input.basic_medical_record.physical_examination.blood_pressure",
+            "呼吸": "input.basic_medical_record.physical_examination.respiration",
+            "辅助检查": "input_request.basic_medical_record.auxiliary_examination"
+        }
+        if control_quality.item not in [None, "", "空"]:
+            control_quality.field_path = field_path_map.get(control_quality.item)
+        else:
+            # 处理多个值的情况
+            if control_quality.field:
+                fields = control_quality.field.split(';')
+                paths = [field_path_map.get(field, field) for field in fields]
+                control_quality.field_path = ';'.join(paths)
+            else:
+                control_quality.field_path = None
+        
+        quality_add_str_list = ["体温:", "脉搏:", "血压:", "呼吸:", "主诉:", "现病史:", "既往史:", "个人史:", "过敏史:", "体格检查:", "辅助检查:"]
+
+        processed_list = []
+        for item in control_quality.error_segment_list:
+            processed_item = item
+            # 检查是否以任何前缀开头
+            for prefix in quality_add_str_list:
+                if item.startswith(prefix):
+                    # 提取冒号后的部分（去除前缀和冒号后的空格）
+                    processed_item = item[len(prefix):].strip()
+                    break 
+            # 在添加到结果列表前检查
+            if processed_item == "空":
+                processed_item = ""
+            processed_list.append(processed_item)
+        if control_quality.auto_modify_type in [None, "", "空"]:
+            control_quality.auto_modify_type = False
+        if control_quality.auto_modify_info in [None, "空"]:
+            control_quality.auto_modify_info = "" 
+        control_quality.error_segment_list = processed_list
+
+
     async def async_predict(self, messages:str,  control_quality:ControlQuality, temp:float = 0, top_p:float = 1) -> ControlQuality:
           
         stream = await self.async_client.chat.completions.create(
@@ -263,7 +314,8 @@ class QualityInspect:
         result_dict = self.extract_json_data(answer)
         check_quality = result_dict.get(self.CHECK_QUALITY_KEY, self.QUALITY_PASS)
         auto_modify_info = result_dict.get(self.AUTO_MODIFY_KEY, "")
-        reson_of_no_pass = result_dict.get(self.RESON_OF_NO_PASS, None)
+        reson_of_no_pass = result_dict.get(self.RESON_OF_NO_PASS, None)   
+        error_segment = result_dict.get(self.ERROR_SEGMENT, None)
         
         control_quality_ret.check_quality = check_quality 
         if control_quality_ret.auto_modify_type is True:
@@ -273,7 +325,8 @@ class QualityInspect:
             control_quality_ret.check_quality_detaile = reson_of_no_pass
         if auto_modify_info is not None and self.QUALITY_NO_PASS in check_quality:
             control_quality_ret.amend_advice = auto_modify_info
-        
+        control_quality_ret.error_segment_list = error_segment
+        self.correction_control_quality_values(control_quality_ret)
         
         return control_quality_ret
    

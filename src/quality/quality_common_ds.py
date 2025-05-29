@@ -35,15 +35,17 @@ class BasicMedicalRecord(BaseModel):
 class ControlQuality(BaseModel):
     content: str
     field: str
-    item: str=""
+    item: str | None = None
     standard: str=""
-    check_quality: Union[str, dict] = ""  
-    auto_modify_type: bool = False
-    auto_modify_info: str=""
-    positive_example: str=None
-    negative_example: str=None
-    check_quality_detaile: str=None
-    amend_advice: str=None
+    check_quality: Union[str, dict] | None = None  
+    auto_modify_type: bool | None = None
+    auto_modify_info: str | None = None
+    positive_example: str | None = None
+    negative_example: str | None = None
+    check_quality_detaile: str | None = None
+    amend_advice: str | None = None
+    field_path: str | None = None
+    error_segment_list: list[str] | None = None
     
 
 class HistoricalConversation(BaseModel):
